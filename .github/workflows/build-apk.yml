@@ -29,6 +29,7 @@ jobs:
         run: |
           unzip -q Finguia_v43_Android.zip
           cd Finguia_v43_Android
+          printf "android.useAndroidX=true\nandroid.enableJetifier=true\n" > gradle.properties
           gradle assembleDebug --no-daemon
 
       - name: Guardar APK
