@@ -34,48 +34,63 @@ jobs:
       - name: Preparar firma Release
         env:
           KEYSTORE_BASE64: ${{ secrets.FINGUIA_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.FINGUIA_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.FINGUIA_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.FINGUIA_KEY_PASSWORD }}
         run: |
           echo "$KEYSTORE_BASE64" | base64 --decode > Finguia_v43_Android/finguia-release.jks
           cat > Finguia_v43_Android/keystore.properties <<EOF
           storeFile=finguia-release.jks
-          storePassword=${{ secrets.FINGUIA_KEYSTORE_PASSWORD }}
-          keyAlias=${{ secrets.FINGUIA_KEY_ALIAS }}
-          keyPassword=${{ secrets.FINGUIA_KEY_PASSWORD }}
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
           EOF
 
       - name: Configurar firma en Gradle
         run: |
-          python3 - <<'PY'
-          p = "Finguia_v43_Android/app/build.gradle"
-          s = open(p).read()
-          signing = """
+          cat > Finguia_v43_Android/app/build.gradle <<'EOF'
+          plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
+
           def keystorePropertiesFile = rootProject.file("keystore.properties")
           def keystoreProperties = new Properties()
           keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
-          android.signingConfigs {
-              release {
-                  storeFile file(keystoreProperties['storeFile'])
-                  storePassword keystoreProperties['storePassword']
-                  keyAlias keystoreProperties['keyAlias']
-                  keyPassword keystoreProperties['keyPassword']
+          android {
+              namespace 'com.finguia.app'
+              compileSdk 35
+
+              signingConfigs {
+                  release {
+                      storeFile file(keystoreProperties['storeFile'])
+                      storePassword keystoreProperties['storePassword']
+                      keyAlias keystoreProperties['keyAlias']
+                      keyPassword keystoreProperties['keyPassword']
+                  }
+              }
+
+              defaultConfig {
+                  applicationId 'com.finguia.app'
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 43
+                  versionName '4.3'
+              }
+
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                  }
               }
           }
 
-          """
-          s = s.replace("android {", signing + "android {", 1)
-          s = s.replace(
-              "defaultConfig {",
-              "signingConfigs { release signingConfig signingConfigs.release }\n    defaultConfig {",
-              1
-          )
-          s = s.replace(
-              "targetSdk 35; versionCode 43; versionName '4.3' }",
-              "targetSdk 35; versionCode 43; versionName '4.3'\n        signingConfig signingConfigs.release }",
-              1
-          )
-          open(p, "w").write(s)
-          PY
+          kotlin { jvmToolchain(17) }
+
+          dependencies {
+              implementation 'androidx.core:core-ktx:1.15.0'
+              implementation 'androidx.appcompat:appcompat:1.7.0'
+              implementation 'androidx.webkit:webkit:1.12.1'
+          }
+          EOF
 
       - name: Compilar APK Release
         run: |
