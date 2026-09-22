@@ -95,10 +95,12 @@ jobs:
       - name: Compilar APK Release
         run: |
           cd Finguia_v43_Android
-          gradle assembleRelease --no-daemon
+                   gradle assembleRelease bundleRelease --no-daemon
 
-      - name: Guardar APK Release
+      - name: Guardar APK y AAB Release
         uses: actions/upload-artifact@v4
         with:
           name: Finguia-v43-Release
-          path: Finguia_v43_Android/app/build/outputs/apk/release/app-release.apk
+          path: |
+            Finguia_v43_Android/app/build/outputs/apk/release/app-release.apk
+            Finguia_v43_Android/app/build/outputs/bundle/release/app-release.aab
