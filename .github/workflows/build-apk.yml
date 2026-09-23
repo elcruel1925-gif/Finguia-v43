@@ -57,7 +57,7 @@ jobs:
 
           android {
               namespace 'com.finguia.app'
-              compileSdk 35
+              compileSdk 36
 
               signingConfigs {
                   release {
@@ -71,7 +71,7 @@ jobs:
               defaultConfig {
                   applicationId 'com.finguia.app'
                   minSdk 23
-                  targetSdk 35
+                  targetSdk 36
                   versionCode 43
                   versionName '4.3'
               }
